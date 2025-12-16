@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Kasir Lesehan Macca (Firebase - Mobile Ready)</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* =============================================== */
+        /* CSS DEFAULT (DESKTOP) */
+        /* =============================================== */
+        :root {
+            --primary-color: #D32F2F; 
+            --secondary-color: #263238; 
+            --highlight-color: #FFC107; 
+            --background-main: #ECEFF1; 
+            --font-family: 'Poppins', sans-serif;
+            --taskbar-height: 50px;
+        }
+
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            background-color: var(--background-main);
+        }
+
+        #app-container {
+            display: flex;
+            height: calc(100vh - var(--taskbar-height));
+        }
+        
+        .main-container {
+            width: 70%;
+            background-color: #fff;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #ddd;
+            overflow: hidden;
+        }
+
+        .cart {
+            width: 30%;
+            background-color: var(--secondary-color);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        }
+
+        #taskbar {
+            height: var(--taskbar-height);
+            background-color: var(--secondary-color);
+            border-top: 3px solid var(--highlight-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000; /* Penting untuk mobile */
+        }
+
+        .taskbar-btn {
+            padding: 8px 15px;
+            background-color: #455A64;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            white-space: nowrap;
+        }
+
+        .taskbar-btn:hover {
+            background-color: #546E7A;
+        }
+
+        .admin-info {
+            font-size: 14px;
+        }
+
+        .menu-category {
+            display: flex;
+            flex-wrap: wrap;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            gap: 10px;
+        }
+
+        .cat-button {
+            background-color: #f5f5f5;
+            color: var(--secondary-color);
+            border: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .cat-button.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .menu-grid {
+            flex-grow: 1;
+            padding: 15px 0;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 20px;
+            align-content: flex-start;
+        }
+
+        .menu-item-card {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease;
+        }
+        
+        .item-image-container {
+            width: 100%;
+            height: 130px;
+            overflow: hidden;
+        }
+
+        .item-details {
+            padding: 10px 10px 15px 10px;
+            text-align: center;
+        }
+
+        .cart-header {
+            padding: 20px;
+            text-align: center;
+            background-color: #37474F; 
+        }
+
+        .cart-header input[type="text"] {
+            width: 90%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin-top: 10px;
+            color: var(--secondary-color); 
+            background-color: white; 
+            font-weight: 600;
+        }
+        
+        .order-options {
+            display: flex;
+            padding: 10px 20px 0;
+            gap: 10px;
+        }
+
+        .option-btn {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #546E7A;
+            background-color: #37474F;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .option-btn.active {
+            background-color: var(--primary-color); 
+            border-color: var(--primary-color);
+        }
+
+        .cart-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px dashed #546E7A;
+        }
+
+        .item-info { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-qty-control { display: flex; align-items: center; gap: 5px; flex-shrink: 0; width: 90px; justify-content: center; }
+        .item-price { width: 90px; text-align: right; font-weight: 700; color: var(--highlight-color); flex-shrink: 0; }
+
+        .cart-summary {
+            padding: 20px;
+            background-color: #1a237e; 
+            border-top: 5px solid var(--highlight-color);
+            flex-shrink: 0;
+        }
+        
+        .payment-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 20px;
+            background-color: #388E3C; 
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: 700;
+        }
+
+        #login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--secondary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .login-box {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 300px;
+            text-align: center;
+        }
+        
+        .login-box h2 {
+            color: var(--primary-color);
+        }
+        
+        .login-box input {
+            width: 90%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        
+        .login-box button {
+            width: 95%;
+            padding: 12px;
+            margin-top: 15px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        #paymentModal, #historyModal, #recapModal {
+            display: none; 
+            position: fixed; 
+            z-index: 99999; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.7); 
+
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+        }
+
+        #paymentModal > div, #historyModal > div, #recapModal > div {
+            background-color: #ffffff;
+            padding: 30px;
+            border: 1px solid #ddd;
+            width: 90%; 
+            max-width: 600px; 
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5); 
+            animation: fadeIn 0.3s ease-out; 
+        }
+        
+        .modal-close {
+            color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;
+        }
+
+        .modal-btn {
+            width: 100%;
+            padding: 15px;
+            margin-top: 10px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 12px; 
+        }
+        .history-table th, .history-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .history-table th {
+            background-color: #f2f2f2;
+            color: var(--secondary-color);
+        }
+
+        #success-notification {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #4CAF50; 
+            color: white;
+            padding: 25px 40px;
+            border-radius: 12px;
+            z-index: 100000;
+            font-size: 24px;
+            font-weight: 700;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            opacity: 0; 
+            transition: opacity 0.5s ease-in-out; 
+        }
+        
+        /* =============================================== */
+        /* MEDIA QUERIES (RESPONSIVE / MOBILE) */
+        /* =============================================== */
+        @media (max-width: 768px) {
+            /* 1. Ubah Container Utama menjadi Tumpuk (Kolom) */
+            #app-container {
+                flex-direction: column;
+                height: calc(100vh - var(--taskbar-height));
+            }
+
+            /* 2. Menu dan Cart mengambil lebar penuh */
+            .main-container, .cart {
+                width: 100%;
+                border-right: none;
+                flex-shrink: 0;
+            }
+
+            /* 3. Atur Tinggi untuk Menu dan Cart */
+            .main-container {
+                height: 70vh; /* Menu 70% dari tinggi layar yang tersisa */
+                padding-bottom: 10px;
+            }
+            .cart {
+                height: 30vh; /* Keranjang 30% dari tinggi layar yang tersisa */
+                position: fixed; /* Jadikan Cart overlay di bagian bawah */
+                bottom: var(--taskbar-height);
+                z-index: 100;
+                box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            }
+
+            /* 4. Sembunyikan overflow pada body saat mobile */
+            body {
+                overflow: auto;
+            }
+            
+            /* 5. Kecilkan ukuran font di Cart Summary agar muat */
+            .cart-summary * {
+                font-size: 14px;
+            }
+            .cart-summary strong {
+                font-size: 16px;
+            }
+            .payment-btn {
+                padding: 12px;
+                font-size: 16px;
+                margin-top: 10px;
+            }
+            
+            /* 6. Taskbar Button agar lebih mudah diklik */
+            .taskbar-btn {
+                padding: 10px 8px;
+                font-size: 12px;
+            }
+            #taskbar {
+                padding: 0 10px;
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+            }
+            
+            /* Tombol taskbar mobile tumpuk di samping menu */
+            #taskbar > div:last-child {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            /* 7. Sembunyikan panel yang tidak aktif */
+            .hidden-mobile {
+                display: none !important;
+            }
+
+            /* 8. Kecilkan tampilan menu grid */
+            .menu-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 10px;
+            }
+            .item-image-container {
+                height: 100px;
+            }
+            .item-details h4 {
+                font-size: 14px;
+            }
+            .item-details p {
+                font-size: 12px;
+            }
+            
+            /* Sembunyikan info admin dan taskbar riwayat/rekap di mobile saat toggle view aktif */
+            .admin-info, #taskbar > div:last-child {
+                display: none;
+            }
+            
+            #mobile-toggle-view {
+                flex-grow: 1; /* Biarkan tombol mobile mengambil ruang */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>LOGIN KASIR MACCA</h2> 
+            <input type="text" id="loginUsername" placeholder="Username" required>
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <button onclick="handleLogin()">LOGIN</button>
+            <p id="login-message" style="color: var(--primary-color); margin-top: 10px; font-size: 14px;"></p>
+        </div>
+    </div>
+
+
+    <div id="app-container" style="display: none;"> 
+        <div class="main-container">
+            <div class="menu-category" id="category-panel">
+                </div>
+            <div class="menu-grid" id="menu-grid">
+                <p>Memuat menu...</p>
+            </div>
+        </div>
+
+        <div class="cart">
+            <div class="cart-header">
+                <h3>🛒 Pesanan</h3>
+                <input type="text" id="customerName" placeholder="Nama Pelanggan (Opsional)">
+            </div>
+            
+            <div class="order-options" id="order-options">
+                <button class="option-btn active" id="btn-dinein" onclick="setOrderType('DINEIN')">MAKAN DISINI</button>
+                
+                <div style="display: flex; flex-grow: 1; gap: 5px;">
+                    <button class="option-btn" id="btn-takeaway" onclick="setOrderType('TAKEAWAY')" style="flex-grow: 1;">ANTAR</button>
+                    
+                    <select id="shippingFeeSelect" onchange="updateShippingFee(this.value)" style="width: 50%; padding: 5px; border-radius: 5px; background-color: #546E7A; color: white; border: 1px solid #546E7A; display: none;">
+                        <option value="0">Pilih Ongkir</option>
+                        <option value="5000">5.000</option>
+                        <option value="10000">10.000</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="cart-list" id="cart-list">
+                </div>
+            <div class="cart-summary">
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">Rp 0</span>
+                </div>
+                <div class="summary-row">
+                    <span id="fee-label">Biaya Ongkir:</span> 
+                    <span id="packaging-fee">Rp 0</span> 
+                </div>
+                <hr style="border-color: #555;">
+                <div class="summary-row">
+                    <strong>TOTAL AKHIR:</strong>
+                    <strong id="total-akhir">Rp 0</strong>
+                </div>
+                <button class="payment-btn" onclick="openPaymentModal()">PROSES BAYAR</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="taskbar" style="display: none;">
+        <div class="admin-info">
+            Kasir Aktif: <span id="current-admin-name"></span>
+        </div>
+        
+        <div id="mobile-toggle-view" style="display: none; gap: 5px;">
+             <button class="taskbar-btn" id="btn-show-menu" onclick="toggleView('menu')" style="background-color: #03A9F4; display: none;">Tampilkan Menu</button>
+             <button class="taskbar-btn" id="btn-show-cart" onclick="toggleView('cart')" style="background-color: #FBC02D;">Tampilkan Keranjang (<span id="cart-count">0</span>)</button>
+        </div>
+        
+        <div>
+            <button class="taskbar-btn" onclick="openHistoryModal()">Riwayat Transaksi</button>
+            <button class="taskbar-btn" onclick="openRecapModal()" style="background-color: #00796B;">Rekapitulasi</button>
+            <button class="taskbar-btn" onclick="handleLogout()">Logout</button>
+        </div>
+    </div>
+
+
+    <div id="paymentModal" style="display:none;">
+        <div>
+            <span class="modal-close" onclick="closeModal('paymentModal')">&times;</span>
+            <h3 style="color: var(--secondary-color); margin-top: 5px;">Pembayaran Tunai</h3>
+            <hr>
+
+            <p>Total Tagihan: <strong id="modal-total-amount" style="color: var(--primary-color); font-size: 20px;">Rp 0</strong></p>
+            
+            <div id="cashInputArea">
+                <label for="cashReceived" style="display: block; margin-bottom: 5px; font-weight: 600;">Uang Diterima (Rp):</label>
+                <input type="number" id="cashReceived" placeholder="Masukkan jumlah uang" style="width: 95%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                <button class="modal-btn" onclick="finalizeCashPayment()" style="width: 100%; background-color: var(--primary-color); margin-top: 10px;">Hitung & Selesaikan</button>
+                <p id="cash-kembalian" style="font-weight: 700; margin-top: 10px; font-size: 18px;">Kembalian: Rp 0</p>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="historyModal" style="display:none;">
+        <div>
+            <span class="modal-close" onclick="closeModal('historyModal')">&times;</span>
+            <h3 style="color: var(--secondary-color); margin-top: 5px;">Riwayat Transaksi Kasir <span id="history-admin-name"></span></h3>
+            <hr>
+
+            <div id="history-list-container">
+                <p style="text-align: center; color: #555;">Memuat data dari server...</p>
+            </div>
+            <button class="modal-btn" onclick="closeModal('historyModal')" style="background-color: #607D8B; margin-top: 20px; width: 30%;">Tutup</button>
+        </div>
+    </div>
+
+    <div id="recapModal" style="display:none;">
+        <div>
+            <span class="modal-close" onclick="closeModal('recapModal')">&times;</span>
+            <h3 style="color: var(--secondary-color); margin-top: 5px;">Laporan Rekapitulasi Penjualan</h3>
+            <hr>
+
+            <h4>Pilih Jenis Rekapitulasi:</h4>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button class="modal-btn" onclick="openRecapTimeSelector('DAILY')" style="background-color: #388E3C; padding: 10px;">Harian</button>
+                <button class="modal-btn" onclick="openRecapTimeSelector('MONTHLY')" style="background-color: #1976D2; padding: 10px;">Bulanan</button>
+                <button class="modal-btn" onclick="openRecapTimeSelector('YEARLY')" style="background-color: #FBC02D; padding: 10px;">Tahunan</button>
+            </div>
+
+            <div id="recap-time-selector" style="margin-top: 15px; border: 1px solid #ddd; padding: 15px; border-radius: 8px; display: none;">
+                <h5 id="recap-title">Pilih Waktu:</h5>
+                <label for="dateInput" id="labelDateInput" style="display: block; margin-top: 10px;">Pilih Tanggal:</label>
+                <input type="date" id="dateInput" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+                
+                <button class="modal-btn" onclick="generateRecap()" style="background-color: var(--primary-color); margin-top: 15px;">Tampilkan Rekap</button>
+            </div>
+
+            <div id="recap-results" style="margin-top: 20px;">
+                </div>
+            
+            <button class="modal-btn" onclick="closeModal('recapModal')" style="background-color: #607D8B; margin-top: 20px; width: 30%;">Tutup</button>
+        </div>
+    </div>
+    
+    <div id="success-notification">
+        <p>✅ SUKSES! TRANSAKSI SELESAI.</p>
+    </div>
+
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <script>
+        // ===============================================
+        // FIREBASE CONFIGURATION 
+        // ===============================================
+        // *** GANTI DENGAN KONFIGURASI FIREBASE ANDA SENDIRI ***
+        const firebaseConfig = {
+            apiKey: "AIzaSyBxj6GgzvaNBPC6dcRwDQzBEJ_7a3pCt48",
+            authDomain: "lesehan-macca-toko.firebaseapp.com",
+            projectId: "lesehan-macca-toko",
+            storageBucket: "lesehan-macca-toko.firebasestorage.app",
+            messagingSenderId: "499494363196",
+            appId: "1:499494363196:web:cee8fd2418707c6632e339"
+        };
+        
+        // Inisialisasi Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        const HISTORY_COLLECTION = "transactions"; 
+
+        // ===============================================
+        // DATA APLIKASI & STATE GLOBAL
+        // ===============================================
+        const PLACEHOLDER_URL = 'https://via.placeholder.com/180x130?text=Macca'; 
+        
+        const USERS = [
+            { username: 'admin', password: '123', name: 'Admin Utama' },
+            { username: 'kasir1', password: '456', name: 'Kasir Shift Pagi' },
+            { username: 'kasir2', password: '789', name: 'Kasir Shift Sore' },
+        ];
+
+        let loggedInUser = null; 
+        let cart = []; 
+        let orderType = 'DINEIN'; 
+        let currentTransactionTotal = 0; 
+        let selectedShippingFee = 0; 
+        
+        // Cek apakah layar adalah Mobile (lebar < 768px)
+        const isMobile = window.matchMedia("(max-width: 768px)").matches;
+        let currentMobileView = 'menu'; // default tampilan mobile
+
+        
+        const menuData = [
+            { id: 'pk1_ab', name: 'Paket Hemat 1 Ayam Bakar + Es Teh', price: 22000, category: 'PAKET', imageURL: PLACEHOLDER_URL },
+            { id: 'pk1_ag', name: 'Paket Hemat 1 Ayam Goreng + Es Teh', price: 22000, category: 'PAKET', imageURL: PLACEHOLDER_URL },
+            { id: 'pk2_ab', name: 'Paket Hemat 2 Ayam Bakar + Sayur', price: 22000, category: 'PAKET', imageURL: PLACEHOLDER_URL },
+            { id: 'aym_ab', name: 'Ayam Bakar Macca (Rica / Biasa)', price: 14000, category: 'AYAM', imageURL: PLACEHOLDER_URL },
+            { id: 'aym_agt', name: 'Ayam Goreng Tepung', price: 16000, category: 'AYAM', imageURL: PLACEHOLDER_URL },
+            { id: 'aym_agsm', name: 'Ayam Goreng Saos Mentega', price: 17000, category: 'AYAM', imageURL: PLACEHOLDER_URL },
+            { id: 'ikn_bb', name: 'Ikan Bandeng Bakar 1 ekor', price: 13000, category: 'IKAN', imageURL: PLACEHOLDER_URL },
+            { id: 'ikn_kb', name: 'Ikan Kakap / Katamba Bakar', price: 30000, category: 'IKAN', imageURL: PLACEHOLDER_URL },
+            { id: 'ud_b', name: 'Udang Bakar', price: 28000, category: 'UDANG', imageURL: PLACEHOLDER_URL },
+            { id: 'ns_p', name: 'Nasi Putih', price: 5000, category: 'NASI', imageURL: PLACEHOLDER_URL },
+            { id: 'ns_gs', name: 'Nasi Goreng Special', price: 25000, category: 'NASI', imageURL: PLACEHOLDER_URL },
+            { id: 'mi_gsf', name: 'Mie Goreng Seafood', price: 23000, category: 'MIE', imageURL: PLACEHOLDER_URL },
+            { id: 'sy_kc', name: 'Kangkung Cah', price: 8000, category: 'SAYUR', imageURL: PLACEHOLDER_URL },
+            { id: 'tt_gb', name: 'Tempe / Tahu Goreng Biasa', price: 7000, category: 'TAHU_TEMPE', imageURL: PLACEHOLDER_URL },
+        ];
+
+        // ===============================================
+        // FUNGSI LOGIN / LOGOUT
+        // ===============================================
+        window.handleLogin = function() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const message = document.getElementById('login-message');
+            
+            const user = USERS.find(u => u.username === username && u.password === password);
+
+            if (user) {
+                loggedInUser = user;
+                message.textContent = 'Login berhasil!';
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-container').style.display = 'flex';
+                document.getElementById('taskbar').style.display = 'flex';
+                
+                document.getElementById('current-admin-name').textContent = loggedInUser.name;
+                
+                initializeCategories(); 
+                renderCart();
+                
+                // Atur tampilan awal mobile
+                if(isMobile) {
+                    toggleView('menu');
+                }
+
+            } else {
+                message.textContent = 'Username atau Password salah.';
+            }
+        }
+        
+        window.handleLogout = function() {
+            loggedInUser = null;
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('taskbar').style.display = 'none';
+            
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('login-message').textContent = '';
+        }
+
+        // ===============================================
+        // FUNGSI UMUM & FORMAT
+        // ===============================================
+        function formatRupiah(number) {
+            if (typeof number !== 'number' || isNaN(number)) {
+                return 'Rp 0';
+            }
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(number);
+        }
+
+        window.closeModal = function(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // ===============================================
+        // FUNGSI TOGGLE MOBILE VIEW
+        // ===============================================
+        window.toggleView = function(view) {
+            if (!isMobile) return;
+            
+            const menuContainer = document.querySelector('.main-container');
+            const cartContainer = document.querySelector('.cart');
+            const btnShowMenu = document.getElementById('btn-show-menu');
+            const btnShowCart = document.getElementById('btn-show-cart');
+            const toggleContainer = document.getElementById('mobile-toggle-view');
+            const taskbarButtons = document.querySelector('#taskbar > div:last-child');
+            const adminInfo = document.querySelector('.admin-info');
+
+            // Sembunyikan semua tombol taskbar utama dan info admin saat mode toggle
+            if (toggleContainer) {
+                toggleContainer.style.display = 'flex';
+                if (taskbarButtons) taskbarButtons.style.display = 'none';
+                if (adminInfo) adminInfo.style.display = 'none';
+            }
+
+            if (view === 'menu') {
+                menuContainer.classList.remove('hidden-mobile');
+                cartContainer.classList.add('hidden-mobile');
+                btnShowMenu.style.display = 'none';
+                btnShowCart.style.display = 'block';
+                currentMobileView = 'menu';
+            } else if (view === 'cart') {
+                cartContainer.classList.remove('hidden-mobile');
+                menuContainer.classList.add('hidden-mobile');
+                btnShowCart.style.display = 'none';
+                btnShowMenu.style.display = 'block';
+                currentMobileView = 'cart';
+            }
+        }
+
+        // ===============================================
+        // FUNGSI RIWAYAT
+        // ===============================================
+        
+        window.openHistoryModal = async function() {
+            const container = document.getElementById('history-list-container');
+            container.innerHTML = '<p style="text-align: center; color: #555;">Memuat data riwayat dari Firebase...</p>';
+            
+            document.getElementById('history-admin-name').textContent = loggedInUser ? loggedInUser.name : 'Unknown';
+            document.getElementById('historyModal').style.display = 'flex';
+
+            try {
+                const snapshot = await db.collection(HISTORY_COLLECTION)
+                                         .orderBy('timestamp', 'desc')
+                                         .limit(50) 
+                                         .get();
+
+                const history = [];
+                snapshot.forEach(doc => {
+                    history.push({ id: doc.id, ...doc.data() }); 
+                });
+
+                if (history.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #555;">Belum ada riwayat transaksi yang tersimpan di Firebase.</p>';
+                } else {
+                    // Header tabel: Tanggal & Jam | Kasir | Pelanggan | Ongkir | Total
+                    let html = '<table class="history-table"><thead><tr><th>Tanggal & Jam</th><th>Kasir</th><th>Pelanggan</th><th>Ongkir</th><th>Total</th></tr></thead><tbody>';
+                    
+                    history.forEach((tx) => {
+                        const date = tx.timestamp && tx.timestamp.toDate ? tx.timestamp.toDate() : new Date();
+                        
+                        // Format tanggal dan jam lengkap
+                        const dateTimeString = date.toLocaleDateString('id-ID', {
+                            day: '2-digit', month: 'short', year: 'numeric', 
+                            hour: '2-digit', minute: '2-digit', second: '2-digit' 
+                        }).replace(',', ' ') + ' WIB';
+                        
+                        const adminName = tx.adminName || 'Unknown Kasir';
+                        const customerName = tx.customerName || 'Anonim'; 
+                        
+                        const shippingFee = (typeof tx.shippingFee === 'number') ? tx.shippingFee : 0; 
+                        const totalAmount = (typeof tx.totalAmount === 'number') ? tx.totalAmount : 0; 
+
+                        html += `
+                            <tr>
+                                <td>${dateTimeString}</td>
+                                <td>${adminName}</td>
+                                <td>${customerName}</td>
+                                <td>${formatRupiah(shippingFee)}</td>
+                                <td><strong>${formatRupiah(totalAmount)}</strong></td>
+                            </tr>
+                        `;
+                    });
+
+                    html += '</tbody></table>';
+                    container.innerHTML = html;
+                }
+
+            } catch (error) {
+                console.error("Gagal mengambil riwayat dari Firebase:", error);
+                container.innerHTML = `<p style="text-align: center; color: var(--primary-color);">❌ Gagal memuat riwayat. Cek konsol atau pastikan aturan keamanan (rules) Firestore Anda mengizinkan pembacaan.</p>`;
+            }
+        }
+
+        // ===============================================
+        // FUNGSI REKAPITULASI
+        // ===============================================
+        let selectedRecapType = 'DAILY';
+
+        window.openRecapModal = function() {
+            document.getElementById('recapModal').style.display = 'flex';
+            document.getElementById('recap-time-selector').style.display = 'none';
+            document.getElementById('recap-results').innerHTML = '<p style="color:#555;">Pilih jenis rekapitulasi untuk memulai.</p>';
+        }
+
+        window.openRecapTimeSelector = function(type) {
+            selectedRecapType = type;
+            const selector = document.getElementById('recap-time-selector');
+            const title = document.getElementById('recap-title');
+            const dateInput = document.getElementById('dateInput');
+            const labelDateInput = document.getElementById('labelDateInput');
+            
+            dateInput.style.display = 'block';
+
+            if (type === 'DAILY') {
+                title.textContent = "Pilih Tanggal Harian:";
+                labelDateInput.textContent = "Pilih Tanggal:";
+                dateInput.type = 'date';
+            } else if (type === 'MONTHLY') {
+                title.textContent = "Pilih Bulan dan Tahun:";
+                labelDateInput.textContent = "Pilih Bulan (format YYYY-MM):";
+                dateInput.type = 'month'; 
+            } else if (type === 'YEARLY') {
+                title.textContent = "Pilih Tahun:";
+                labelDateInput.textContent = "Pilih Tahun (format YYYY):";
+                dateInput.type = 'year'; 
+            }
+            selector.style.display = 'block';
+        }
+
+        window.generateRecap = async function() {
+            const dateValue = document.getElementById('dateInput').value;
+            const resultsContainer = document.getElementById('recap-results');
+            
+            if (!dateValue) {
+                resultsContainer.innerHTML = '<p style="color:red;">Mohon pilih tanggal/bulan/tahun terlebih dahulu.</p>';
+                return;
+            }
+
+            resultsContainer.innerHTML = '<p style="text-align:center;">Menghitung rekapitulasi...</p>';
+            
+            try {
+                let startDate, endDate;
+                
+                // --- 1. Menentukan Batas Waktu (start & end date) ---
+                if (selectedRecapType === 'DAILY') {
+                    startDate = new Date(dateValue);
+                    startDate.setHours(0, 0, 0, 0); 
+                    endDate = new Date(dateValue);
+                    endDate.setHours(23, 59, 59, 999);
+                } else if (selectedRecapType === 'MONTHLY') {
+                    const [year, month] = dateValue.split('-').map(Number);
+                    startDate = new Date(year, month - 1, 1, 0, 0, 0); 
+                    endDate = new Date(year, month, 0, 23, 59, 59, 999); 
+                } else if (selectedRecapType === 'YEARLY') {
+                    const year = Number(dateValue);
+                    startDate = new Date(year, 0, 1, 0, 0, 0); 
+                    endDate = new Date(year, 11, 31, 23, 59, 59, 999); 
+                }
+
+                // --- 2. Query Firebase ---
+                const snapshot = await db.collection(HISTORY_COLLECTION)
+                                         .where('timestamp', '>=', startDate)
+                                         .where('timestamp', '<=', endDate)
+                                         .orderBy('timestamp', 'asc')
+                                         .get();
+
+                // --- 3. Perhitungan Rekap ---
+                let totalPenjualan = 0;
+                let totalOngkir = 0;
+                let transactionCount = 0;
+                
+                snapshot.forEach(doc => {
+                    const tx = doc.data();
+                    const totalAmount = (typeof tx.totalAmount === 'number') ? tx.totalAmount : 0;
+                    const shippingFee = (typeof tx.shippingFee === 'number') ? tx.shippingFee : 0;
+                    
+                    totalPenjualan += totalAmount;
+                    totalOngkir += shippingFee;
+                    transactionCount++;
+                });
+                
+                const netSales = totalPenjualan - totalOngkir;
+
+                // --- 4. Tampilkan Hasil ---
+                let periodText = '';
+                if (selectedRecapType === 'DAILY') periodText = `Tanggal: ${startDate.toLocaleDateString('id-ID')}`;
+                if (selectedRecapType === 'MONTHLY') periodText = `Bulan: ${startDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'long' })}`;
+                if (selectedRecapType === 'YEARLY') periodText = `Tahun: ${startDate.getFullYear()}`;
+
+                resultsContainer.innerHTML = `
+                    <div style="border: 2px solid #D32F2F; padding: 15px; border-radius: 8px; background-color: #FFEBEE;">
+                        <h4 style="margin-top: 0;">HASIL REKAPITULASI (${selectedRecapType.toUpperCase()})</h4>
+                        <p style="font-weight: 600;">Periode: ${periodText}</p>
+                        <hr>
+                        <p>Jumlah Transaksi: <strong>${transactionCount}</strong></p>
+                        <p>Total Penjualan Kotor (Termasuk Ongkir): <strong style="color: #1976D2;">${formatRupiah(totalPenjualan)}</strong></p>
+                        <p>Total Biaya Ongkir: <strong style="color: #FFC107;">${formatRupiah(totalOngkir)}</strong></p>
+                        <h3>TOTAL PENJUALAN BERSIH: <span style="color: #388E3C;">${formatRupiah(netSales)}</span></h3>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error("Gagal menghitung rekapitulasi:", error);
+                resultsContainer.innerHTML = `<p style="color:red;">❌ Terjadi kesalahan saat mengambil data: ${error.message}</p>`;
+            }
+        }
+        
+        // ===============================================
+        // FUNGSI KASIR UTAMA
+        // ===============================================
+        window.updateShippingFee = function(fee) {
+            selectedShippingFee = parseInt(fee);
+            renderCart();
+        }
+
+        window.setOrderType = function(type) {
+            orderType = type;
+            
+            const dineinBtn = document.getElementById('btn-dinein');
+            const takeawayBtn = document.getElementById('btn-takeaway');
+            const shippingSelect = document.getElementById('shippingFeeSelect'); 
+            
+            dineinBtn.classList.remove('active');
+            takeawayBtn.classList.remove('active');
+
+            if (type === 'DINEIN') {
+                dineinBtn.classList.add('active');
+                shippingSelect.style.display = 'none';
+                shippingSelect.value = 0; 
+                selectedShippingFee = 0; 
+            } else { 
+                takeawayBtn.classList.add('active');
+                shippingSelect.style.display = 'block';
+            }
+            renderCart(); 
+        }
+
+        function renderMenu(category) {
+            const grid = document.getElementById('menu-grid');
+            grid.innerHTML = '';
+            const filteredMenu = menuData.filter(item => item.category === category);
+
+            filteredMenu.forEach(item => {
+                const itemCard = document.createElement('div');
+                itemCard.className = 'menu-item-card';
+                itemCard.onclick = () => addItemToCart(item.id, item.name, item.price);
+                
+                itemCard.innerHTML = `
+                    <div class="item-image-container">
+                        <img src="${item.imageURL}" alt="${item.name}" onerror="this.onerror=null; this.src='${PLACEHOLDER_URL}';">
+                    </div>
+                    <div class="item-details">
+                        <h4>${item.name}</h4>
+                        <p>${formatRupiah(item.price)}</p>
+                    </div>
+                `;
+                grid.appendChild(itemCard);
+            });
+        }
+
+        function addItemToCart(itemId, name, price) {
+            const existingItemIndex = cart.findIndex(item => item.id === itemId);
+            const itemPrice = parseInt(price);
+
+            if (existingItemIndex > -1) {
+                cart[existingItemIndex].qty += 1;
+            } else {
+                cart.push({ id: itemId, name: name, price: itemPrice, qty: 1 });
+            }
+            renderCart();
+            
+            // Pada Mobile, otomatis tampilkan Cart saat item pertama ditambahkan
+            if (isMobile && cart.length === 1 && currentMobileView === 'menu') {
+                toggleView('cart');
+            }
+        }
+
+        window.updateItemQuantity = function(itemId, change) {
+            const index = cart.findIndex(item => item.id === itemId);
+            if (index > -1) {
+                cart[index].qty += change;
+                if (cart[index].qty <= 0) {
+                    cart.splice(index, 1);
+                }
+            }
+            renderCart();
+            
+            // Pada Mobile, jika keranjang kosong, kembali ke menu
+            if (isMobile && cart.length === 0 && currentMobileView === 'cart') {
+                 toggleView('menu');
+            }
+        }
+
+        function renderCart() {
+            const cartList = document.getElementById('cart-list');
+            const feeLabel = document.getElementById('fee-label');
+            cartList.innerHTML = '';
+            let subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            
+            let totalItems = 0; // Untuk mobile counter
+
+            if (cart.length === 0) {
+                cartList.innerHTML = '<p style="text-align:center; padding: 20px; color:#aaa;">Keranjang kosong.</p>';
+            }
+
+            cart.forEach(item => {
+                const itemSubtotal = item.price * item.qty;
+                totalItems += item.qty; // Hitung total item
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'cart-item';
+                
+                itemDiv.innerHTML = `
+                    <div class="item-info">
+                        <span class="item-name">${item.name}</span>
+                        <small> (${formatRupiah(item.price)})</small>
+                    </div>
+                    <div class="item-qty-control">
+                        <button class="qty-btn" onclick="updateItemQuantity('${item.id}', -1)">-</button>
+                        <span>${item.qty}</span>
+                        <button class="qty-btn" onclick="updateItemQuantity('${item.id}', 1)">+</button>
+                    </div>
+                    <div class="item-price">
+                        ${formatRupiah(itemSubtotal)}
+                    </div>
+                `;
+                cartList.appendChild(itemDiv);
+            });
+
+            const isTakeaway = (orderType === 'TAKEAWAY');
+            let totalFees = 0;
+            let totalAkhir = subtotal;
+
+            if (isTakeaway && subtotal > 0) {
+                totalFees = selectedShippingFee;
+                totalAkhir = subtotal + totalFees;
+
+                if (selectedShippingFee > 0) {
+                    feeLabel.innerHTML = `ONGKIR: <span style="color: var(--highlight-color);">${formatRupiah(selectedShippingFee)}</span>:`; 
+                } else {
+                    feeLabel.textContent = `Biaya Ongkir:`; 
+                }
+            } else {
+                feeLabel.textContent = `Biaya Ongkir:`;
+                totalFees = 0;
+                totalAkhir = subtotal;
+            }
+
+            document.getElementById('subtotal').textContent = formatRupiah(subtotal);
+            document.getElementById('packaging-fee').textContent = formatRupiah(totalFees);
+            document.getElementById('total-akhir').textContent = formatRupiah(totalAkhir);
+            
+            if (isMobile) {
+                document.getElementById('cart-count').textContent = totalItems;
+            }
+        }
+
+        // ===============================================
+        // FUNGSI PEMBAYARAN & KIRIM KE FIREBASE
+        // ===============================================
+
+        window.showSuccessNotification = function() {
+            const notification = document.getElementById('success-notification');
+            notification.style.display = 'block';
+            setTimeout(() => { notification.style.opacity = 1; }, 50); 
+            setTimeout(() => { notification.style.opacity = 0; }, 2000); 
+            setTimeout(() => { notification.style.display = 'none'; }, 2500); 
+        }
+
+        window.openPaymentModal = function() {
+            let subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            
+            if (subtotal <= 0) { 
+                alert("Keranjang kosong. Mohon tambahkan item terlebih dahulu.");
+                return;
+            }
+            
+            let totalFees = (orderType === 'TAKEAWAY') ? selectedShippingFee : 0;
+            const totalAkhir = subtotal + totalFees;
+            
+            if (orderType === 'TAKEAWAY' && selectedShippingFee === 0) {
+                 alert("Anda memilih ANTAR. Mohon pilih biaya ONGKIR terlebih dahulu (5.000 atau 10.000)!");
+                 return;
+            }
+
+            currentTransactionTotal = totalAkhir;
+
+            document.getElementById('modal-total-amount').textContent = formatRupiah(totalAkhir);
+            
+            document.getElementById('paymentModal').style.display = 'flex'; 
+            
+            document.getElementById('cashReceived').value = '';
+            document.getElementById('cash-kembalian').textContent = 'Kembalian: Rp 0';
+        }
+
+        window.finalizeCashPayment = async function() {
+            const total = currentTransactionTotal;
+            const uangDiterima = parseFloat(document.getElementById('cashReceived').value);
+
+            if (isNaN(uangDiterima) || uangDiterima < total) {
+                alert("Uang Diterima tidak valid atau kurang dari total tagihan!");
+                return;
+            } 
+
+            const kembalian = uangDiterima - total;
+            
+            // 1. Rekam data transaksi
+            const transactionRecord = {
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(), 
+                adminName: loggedInUser ? loggedInUser.name : 'N/A',
+                orderType: orderType,
+                customerName: document.getElementById('customerName').value || 'Anonim',
+                items: JSON.parse(JSON.stringify(cart)), 
+                subtotal: cart.reduce((sum, item) => sum + (item.price * item.qty), 0),
+                shippingFee: selectedShippingFee,
+                totalAmount: total,
+                cashReceived: uangDiterima,
+                change: kembalian,
+            };
+
+            // 2. KIRIM DATA KE FIREBASE
+            try {
+                closeModal('paymentModal'); 
+                
+                const docRef = await db.collection(HISTORY_COLLECTION).add(transactionRecord);
+                
+                showSuccessNotification(); 
+                
+                // 3. Reset Kasir setelah sukses kirim
+                cart = [];
+                document.getElementById('customerName').value = '';
+                document.getElementById('shippingFeeSelect').value = 0; 
+                selectedShippingFee = 0; 
+                renderCart();
+                
+                // Kembali ke tampilan menu setelah reset (untuk mobile)
+                if (isMobile) {
+                    toggleView('menu');
+                }
+
+            } catch (error) {
+                console.error("Gagal menyimpan transaksi ke Firebase:", error);
+                alert(`Error: Gagal menyimpan riwayat transaksi ke server.\nMohon cek koneksi atau pastikan aturan keamanan (rules) Firestore Anda mengizinkan penulisan.\nKembalian: ${formatRupiah(kembalian)}`);
+            }
+        }
+
+
+        // ===============================================
+        // INISIALISASI
+        // ===============================================
+        function initializeCategories() {
+            const categoryPanel = document.getElementById('category-panel');
+            const categories = [...new Set(menuData.map(item => item.category))]; 
+            categoryPanel.innerHTML = ''; 
+
+            categories.forEach((cat, index) => {
+                const button = document.createElement('button');
+                button.className = index === 0 ? 'cat-button active' : 'cat-button';
+                button.textContent = cat.replace('_', ' & '); 
+                button.dataset.category = cat;
+                button.addEventListener('click', (e) => {
+                    document.querySelectorAll('.cat-button').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    renderMenu(e.target.dataset.category);
+                });
+                categoryPanel.appendChild(button);
+            });
+            
+            if (categories.length > 0) {
+                 renderMenu(categories[0]);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCategories();
+
+            // Set tampilan awal
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('taskbar').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+
+
+            document.getElementById('cashReceived').addEventListener('input', () => {
+                const total = currentTransactionTotal;
+                const uangDiterima = parseFloat(document.getElementById('cashReceived').value);
+                const kembalian = uangDiterima > total ? uangDiterima - total : 0;
+                document.getElementById('cash-kembalian').textContent = `Kembalian: ${formatRupiah(kembalian)}`;
+            });
+        });
+    </script>
+</body>
+</html>
