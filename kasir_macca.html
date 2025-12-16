@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Kasir Lesehan Macca (Firebase - Mobile Ready)</title>
+    <title>Aplikasi Kasir Lesehan Macca (Firebase - Mobile Stable)</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
@@ -65,7 +65,7 @@
             padding: 0 20px;
             color: white;
             font-weight: 600;
-            z-index: 1000; /* Penting untuk mobile */
+            z-index: 1000;
         }
 
         .taskbar-btn {
@@ -348,7 +348,8 @@
             /* 1. Ubah Container Utama menjadi Tumpuk (Kolom) */
             #app-container {
                 flex-direction: column;
-                height: calc(100vh - var(--taskbar-height));
+                /* Tinggi penuh dikurangi taskbar */
+                height: calc(100vh - var(--taskbar-height)); 
             }
 
             /* 2. Menu dan Cart mengambil lebar penuh */
@@ -360,15 +361,20 @@
 
             /* 3. Atur Tinggi untuk Menu dan Cart */
             .main-container {
-                height: 70vh; /* Menu 70% dari tinggi layar yang tersisa */
+                height: 100%; /* Menu mengisi sisa ruang yang tersedia */
                 padding-bottom: 10px;
             }
             .cart {
-                height: 30vh; /* Keranjang 30% dari tinggi layar yang tersisa */
-                position: fixed; /* Jadikan Cart overlay di bagian bawah */
+                height: 50vh; /* Keranjang menutupi setengah layar saat aktif */
+                position: fixed; 
                 bottom: var(--taskbar-height);
                 z-index: 100;
                 box-shadow: 0 0 15px rgba(0,0,0,0.5);
+                /* Pastikan cart list bisa discroll */
+                overflow-y: auto; 
+            }
+            .cart-summary {
+                flex-shrink: 0; /* Pastikan summary tidak ikut discroll */
             }
 
             /* 4. Sembunyikan overflow pada body saat mobile */
@@ -401,16 +407,18 @@
                 width: 100%;
             }
             
-            /* Tombol taskbar mobile tumpuk di samping menu */
-            #taskbar > div:last-child {
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
+            /* Sembunyikan tombol taskbar utama dan info admin di mobile saat toggle view aktif */
+            .admin-info, #desktop-main-buttons {
+                display: none;
+            }
+            
+            #mobile-toggle-view {
+                flex-grow: 1; /* Biarkan tombol mobile mengambil ruang */
             }
 
-            /* 7. Sembunyikan panel yang tidak aktif */
+            /* 7. Sembunyikan panel yang tidak aktif (!!! PENTING: Menggunakan !important) */
             .hidden-mobile {
-                display: none !important;
+                display: none !important; 
             }
 
             /* 8. Kecilkan tampilan menu grid */
@@ -426,15 +434,6 @@
             }
             .item-details p {
                 font-size: 12px;
-            }
-            
-            /* Sembunyikan info admin dan taskbar riwayat/rekap di mobile saat toggle view aktif */
-            .admin-info, #taskbar > div:last-child {
-                display: none;
-            }
-            
-            #mobile-toggle-view {
-                flex-grow: 1; /* Biarkan tombol mobile mengambil ruang */
             }
         }
     </style>
@@ -508,12 +507,12 @@
             Kasir Aktif: <span id="current-admin-name"></span>
         </div>
         
-        <div id="mobile-toggle-view" style="display: none; gap: 5px;">
+        <div id="mobile-toggle-view" style="display: none; gap: 5px; flex-grow: 1; justify-content: center;">
              <button class="taskbar-btn" id="btn-show-menu" onclick="toggleView('menu')" style="background-color: #03A9F4; display: none;">Tampilkan Menu</button>
-             <button class="taskbar-btn" id="btn-show-cart" onclick="toggleView('cart')" style="background-color: #FBC02D;">Tampilkan Keranjang (<span id="cart-count">0</span>)</button>
+             <button class="taskbar-btn" id="btn-show-cart" onclick="toggleView('cart')" style="background-color: #FBC02D;">Keranjang (<span id="cart-count">0</span>)</button>
         </div>
         
-        <div>
+        <div id="desktop-main-buttons">
             <button class="taskbar-btn" onclick="openHistoryModal()">Riwayat Transaksi</button>
             <button class="taskbar-btn" onclick="openRecapModal()" style="background-color: #00796B;">Rekapitulasi</button>
             <button class="taskbar-btn" onclick="handleLogout()">Logout</button>
@@ -630,7 +629,6 @@
         // Cek apakah layar adalah Mobile (lebar < 768px)
         const isMobile = window.matchMedia("(max-width: 768px)").matches;
         let currentMobileView = 'menu'; // default tampilan mobile
-
         
         const menuData = [
             { id: 'pk1_ab', name: 'Paket Hemat 1 Ayam Bakar + Es Teh', price: 22000, category: 'PAKET', imageURL: PLACEHOLDER_URL },
@@ -673,7 +671,7 @@
                 
                 // Atur tampilan awal mobile
                 if(isMobile) {
-                    toggleView('menu');
+                    toggleView('menu'); // Paksa tampilan awal ke Menu
                 }
 
             } else {
@@ -720,26 +718,16 @@
             const cartContainer = document.querySelector('.cart');
             const btnShowMenu = document.getElementById('btn-show-menu');
             const btnShowCart = document.getElementById('btn-show-cart');
-            const toggleContainer = document.getElementById('mobile-toggle-view');
-            const taskbarButtons = document.querySelector('#taskbar > div:last-child');
-            const adminInfo = document.querySelector('.admin-info');
-
-            // Sembunyikan semua tombol taskbar utama dan info admin saat mode toggle
-            if (toggleContainer) {
-                toggleContainer.style.display = 'flex';
-                if (taskbarButtons) taskbarButtons.style.display = 'none';
-                if (adminInfo) adminInfo.style.display = 'none';
-            }
-
+            
             if (view === 'menu') {
                 menuContainer.classList.remove('hidden-mobile');
-                cartContainer.classList.add('hidden-mobile');
+                cartContainer.classList.add('hidden-mobile'); // Menggunakan !important CSS
                 btnShowMenu.style.display = 'none';
                 btnShowCart.style.display = 'block';
                 currentMobileView = 'menu';
             } else if (view === 'cart') {
                 cartContainer.classList.remove('hidden-mobile');
-                menuContainer.classList.add('hidden-mobile');
+                menuContainer.classList.add('hidden-mobile'); // Menggunakan !important CSS
                 btnShowCart.style.display = 'none';
                 btnShowMenu.style.display = 'block';
                 currentMobileView = 'cart';
@@ -989,7 +977,7 @@
             renderCart();
             
             // Pada Mobile, otomatis tampilkan Cart saat item pertama ditambahkan
-            if (isMobile && cart.length === 1 && currentMobileView === 'menu') {
+            if (isMobile && cart.length > 0 && currentMobileView === 'menu') {
                 toggleView('cart');
             }
         }
@@ -1204,6 +1192,18 @@
                 const kembalian = uangDiterima > total ? uangDiterima - total : 0;
                 document.getElementById('cash-kembalian').textContent = `Kembalian: ${formatRupiah(kembalian)}`;
             });
+
+            // LOGIKA MOBILE PENTING
+            if (isMobile) {
+                // Tampilkan kontrol toggle mobile
+                document.getElementById('mobile-toggle-view').style.display = 'flex';
+                // Sembunyikan tombol desktop utama yang tidak diperlukan
+                document.getElementById('desktop-main-buttons').style.display = 'none';
+                // Sembunyikan keranjang saat inisialisasi awal
+                document.querySelector('.cart').classList.add('hidden-mobile');
+                // Pastikan menu terlihat
+                document.querySelector('.main-container').classList.remove('hidden-mobile');
+            }
         });
     </script>
 </body>
